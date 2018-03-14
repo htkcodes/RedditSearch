@@ -71,7 +71,26 @@ require = (function (modules, cache, entry) {
 
   // Override the current require with this new one
   return newRequire;
-})({6:[function(require,module,exports) {
+})({11:[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = {
+    search: function search(searchTerm, searchLimit, sortBy) {
+        return fetch("http://www.reddit.com/search.json?q=" + searchTerm + "&sort=" + sortBy + "&limit=" + searchLimit).then(function (res) {
+            return res.json();
+        }).then(function (data) {
+            return data.data.children.map(function (data) {
+                return data.data;
+            });
+        }).catch(function (err) {
+            return console.log(err);
+        });
+    }
+};
+},{}],5:[function(require,module,exports) {
 
 // shim for using process in browser
 var process = module.exports = {};
@@ -10626,18 +10645,79 @@ if ( !noGlobal ) {
 return jQuery;
 } );
 
-},{"process":6}],2:[function(require,module,exports) {
+},{"process":5}],2:[function(require,module,exports) {
+"use strict";
+
+var _redditapi = require("./redditapi");
+
+var _redditapi2 = _interopRequireDefault(_redditapi);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
 var jquery = require("jquery");
 window.$ = window.jQuery = jquery;
 var searchForm = $("#search-form");
-var searchInput = $("#search-input");
+var searchInput = document.getElementById('search-input');
 
 searchForm.submit(function (e) {
-   var searchTerm = searchInput.value;
-   console.log(searc);
-   e.preventDefault();
+	var searchTerm = searchInput.value;
+	//Sort
+	var sortBy = document.querySelector('input[name="sortby"]:checked').value;
+
+	console.log(sortBy);
+
+	var searchLimit = document.getElementById('limit').value;
+
+	console.log(searchLimit);
+
+	//Checking input
+
+	if (searchTerm == '') {
+		displayMessage('Add a search term', 'alert-danger');
+	}
+
+	e.preventDefault();
+
+	_redditapi2.default.search(searchTerm, searchLimit, sortBy).then(function (results) {
+
+		var output = "<div class=\"card-colums\">";
+		results.forEach(function (post) {
+
+			var image = post.preview ? post.preview.images[0].source.url : 'https://zdnet2.cbsistatic.com/hub/i/r/2016/05/27/c16d537c-b457-4d84-9b88-8e97ede57180/thumbnail/770x578/f0b848edb037a70d6e0821c061087214/screen-shot-2016-05-27-at-09-25-51.jpg';
+			output += "\n\t<div class=\"card\">\n  <img class=\"card-img-top\" src=\"" + image + "\" alt=\"Card image cap\">\n  <div class=\"card-body\">\n    <h5 class=\"card-title\">" + post.title + "</h5>\n    <p class=\"card-text\">" + truncateText(post.selftext, 100) + "</p>\n    <a href=\"" + post.url + "\" class=\"btn btn-primary\">Read More</a>\n  </div>\n</div>\n\n\n\t";
+		});
+		output += "</div>";
+		document.getElementById('results').innerHTML = output;
+	});
 });
-},{"jquery":4}],8:[function(require,module,exports) {
+
+function displayMessage(message, className) {
+	//
+	var div = document.createElement('div');
+	div.className = "alert " + className;
+
+	div.appendChild(document.createTextNode(message));
+
+	var searchContainer = document.getElementById('search-container');
+
+	var search = document.getElementById('search');
+
+	searchContainer.insertBefore(div, search);
+
+	//Timeout
+
+	setTimeout(function () {
+		document.querySelector('.alert').remove();
+	}, 3000);
+}
+
+function truncateText(text, limit) {
+	var shortened = text.indexOf(' ', limit);
+	if (shortened == -1) return text;
+
+	return text.substring(0, shortened);
+}
+},{"./redditapi":11,"jquery":4}],6:[function(require,module,exports) {
 
 var global = (1, eval)('this');
 var OldModule = module.bundle.Module;
@@ -10659,7 +10739,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '59092' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '50100' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 
@@ -10760,5 +10840,5 @@ function hmrAccept(bundle, id) {
     return hmrAccept(global.require, id);
   });
 }
-},{}]},{},[8,2])
+},{}]},{},[6,2])
 //# sourceMappingURL=/dist/redditsearcher.map
